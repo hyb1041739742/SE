@@ -1,206 +1,209 @@
-#include<io.h>
-#include<bits/stdc++.h>
-#include<cstring>
-#include<iostream>
-#include <sstream>
+#include <cstdio>
+#include <cstring>
+#include <io.h>
+#include <string>
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <map>
+#define pb push_back
+#define ull unsigned long long
+#define inf 0x3f3f3f3f
 using namespace std;
-
-struct NODE{
-	int num;
-	string str;
-	bool operator < (const NODE x) const {  
-			if(num == x.num) return str < x.str; 
-            return num > x.num; 
-    }  
-}node[100000]; 
-
-void getAllFiles(string path, vector<string>& files, int flag) // flagÎª1±íÊ¾Òªµİ¹é 
-{
-	//ÎÄ¼ş¾ä±ú  
-	long   hFile = 0;
-	//ÎÄ¼şĞÅÏ¢  
-	struct _finddata_t fileinfo;  //ºÜÉÙÓÃµÄÎÄ¼şĞÅÏ¢¶ÁÈ¡½á¹¹
-	string p;  //stringÀàºÜÓĞÒâË¼µÄÒ»¸ö¸³Öµº¯Êı:assign()£¬ÓĞºÜ¶àÖØÔØ°æ±¾
-	if ((hFile = _findfirst(p.assign(path).append("\\*").c_str(), &fileinfo)) != -1)
-	{
-		do
-		{
-			if ((fileinfo.attrib &  _A_SUBDIR) && flag)  //ÅĞ¶ÏÊÇ·ñÎªÎÄ¼ş¼Ğ
-			{
-				if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
-				{
-					getAllFiles(p.assign(path).append("\\").append(fileinfo.name), files, flag);//µİ¹éµ±Ç°ÎÄ¼ş¼Ğ
-				}
-			}
-			else    //ÎÄ¼ş´¦Àí
-			{
-				files.push_back(p.assign(path).append("\\").append(fileinfo.name));//ÎÄ¼şÃû
-			}
-		} while (_findnext(hFile, &fileinfo) == 0);  //Ñ°ÕÒÏÂÒ»¸ö£¬³É¹¦·µ»Ø0£¬·ñÔò-1
-		_findclose(hFile);
-	}
+const int maxn = 3e7+100;
+pair<int,int> a[maxn]; 
+pair<ull,ull> cut[maxn];
+pair<ull,string> b[maxn], c[maxn];
+map<string,string> turn;
+map<string,ull> stop, mp, phrase;
+string link[maxn];
+vector<ull> g[300000];
+ull wordNum, cutNum, maxNum = 0, phraseNum = -1, specifiedNum = inf;
+string mode = "\\*.*", path = "res/article";
+bool allowDown;
+//test
+void test(){
+	freopen("res/article/Taylor.txt", "r", stdout);
+//	fclose(stdout);
 }
-
-void mySort(int argc, char **argv, int i, int flag = 0)//´òÓ¡ÅÅĞòºó 
-{
-	int loss = 0;
-	int count = 1;
-	map<string, int> mp;
-	for(map<string, int>::iterator z = mp.begin(); z != mp.end(); z++)
-	{
-		mp.erase(z);
+//ç»Ÿè®¡å­—ç¬¦ä½¿ç”¨é¢‘ç‡ 
+void letterFrequency(string p){
+	cin.clear();
+	string f = "res/article/"+p; 
+	freopen(f.c_str(), "r", stdin), freopen("output/letterFrequency.txt", "w", stdout);
+	for(int i = 0; i < 26; i++) a[i].second = i;
+	char ch; ull sum = 0;
+	while(~scanf("%c", &ch)){
+		if(ch>='A'&&ch<='Z') a[ch-'A'].first--, sum++;
+		else if(ch>='a'&&ch<='z') a[ch-'a'].first--, sum++;
+//		printf("%c", ch);
 	}
-	for(int z = i+1; z < argc; z++)
-	{
-		if(mp[argv[z]] == 0)
-		{
-			mp[argv[z]] = count++;
-			node[mp[argv[z]]].num=1;
-			node[mp[argv[z]]].str=argv[z];
-		}
-		else 
-		{
-			node[mp[argv[z]]].num++;
-		}
-	}
-	if(flag)
-	{
-		string context;
-		string str;
-		std::ifstream is(argv[i-1], std::ios::in);	
-		if(is.is_open())	
-		{
-			std::stringstream strTemp;
-	        strTemp<<is.rdbuf();
-	        context =  strTemp.str();
-			istringstream istr(context);
-			while(!istr.eof())
-			{
-				istr>>str;
-				if(mp[str])
-				{
-					node[mp[str]].num = 0;
-					loss++;
-				}
-			}
-	        is.close();
-		}
-		else 
-		{
-			cout << "Ê§°Ü";
-		}
-	}
-	sort(node+1, node+count);
-	for(int z = 1; z < count-loss; z++)
-	{
-		cout << node[z].str << " " ; 
-	}
+	sort(a, a+26);
+	for(int i = 0; i < 26; i++) printf("%c %.2f%\n", a[i].second+'a', -a[i].first*100.0/sum);
+	fclose(stdin), fclose(stdout);
 }
-
-
-void mySort2(int argc, char argv[][100], int i)//´òÓ¡ÅÅĞòºó 
-{
-	int count = 1;
-	map<string, int> mp;
-	for(map<string, int>::iterator z = mp.begin(); z != mp.end(); z++)
-	{
-		mp.erase(z);
-	}
-	
-	for(int z = i+1; z < argc; z++)
-	{
-		if(mp[argv[z]] == 0)
-		{
-			mp[argv[z]] = count++;
-			node[mp[argv[z]]].num=1;
-			node[mp[argv[z]]].str=argv[z];
-		}
-		else 
-		{
-			node[mp[argv[z]]].num++;
-		}
-	}
-	
-	sort(node+1, node+count);
-	for(int z = 1; z < count; z++)
-	{
-		cout << node[z].str << " "; 
-	}
-}
-
-
-void solve2(char **argv, int i, int flag)//flag±íÊ¾Òªµİ¹é 
-{
-//---------------------------ÏÂÃæ»ñÈ¡¸ÃÄ¿Â¼ÏÂµÄËùÓĞÎÄ¼şÃû×Ö-------------------------------- 
-			string data_dir = argv[i];
-			vector<string> files;
-			getAllFiles(data_dir, files, flag);
-//---------------------------ÏÂÃæ¸ù¾İÎÄ¼şÃû×Ö´ò¿ªÎÄ¼ş--------------------------------------
-			for(int z = 0; z < files.size(); z++)
-			{	
-				string context;  //ÎÄ¼şÖĞÄÚÈİ 
-				string str1;
-				int argc = 1;
-				char argv[10000][100]; //Ã¿¸öµ¥´Ê ,×î¶à10000¸ö 
-				char c[2000]; 
-				for(int g = 0; g < files[z].size(); g++)
-					c[g] = files[z][g];
-				std::ifstream is(c, std::ios::in);	
-//				cout << files[z] << endl;
-				if(is.is_open())	
-				{
-					std::stringstream strTemp;
-			        strTemp<<is.rdbuf();
-			        context =  strTemp.str();
-//			        cout << context;
-			        is.close();
-				}
-				else {
-					cout << "Ê§°Ü";
-				}
-				istringstream istr(context);
-				while(!istr.eof())
-				{
-					istr >> str1;
-					for(int g = 0; g < str1.size(); g++)
-					{
-						argv[argc][g] = str1[g];
+//å•è¯åˆ†æ 
+void wordAnalyze(string p, string f){
+	cin.clear();
+//	freopen("res/article/Taylor.txt", "r", stdin);
+	string tmp = p + "\\" +f;
+	freopen(tmp.c_str(), "r", stdin);
+//	cout << "now: " << f << endl;
+	string s;
+	ull sum = 0, last = 0, k = 0;
+	while(cin>>s){
+		string tmp;
+		for(ull i = 0; i <= s.length(); i++){
+			if((s[i]>='a'&&s[i]<='z')||(s[i]>='0'&&s[i]<='9')) tmp += s[i];
+			else if(s[i]>='A'&&s[i]<='Z') tmp += s[i]-'A'+'a';
+			else {
+				if((tmp[0]>='0'&&tmp[0]<='9')||tmp=="") {
+					if(sum-last>0) {
+						if(sum-1-last>0) cut[k++] = {last, sum-1}, g[sum-last].pb(k-1), maxNum = max(maxNum, sum-last);
+						last = sum;
 					}
-					argc++;
-				} 
-				mySort2(argc, argv, 0);
-				cout << endl;
-			} 			
+					continue;
+				}
+				if(turn.find(tmp)!=turn.end()) tmp = turn[tmp];
+				if(stop.find(tmp)==stop.end()) {
+					mp[tmp]++, link[sum++] = tmp;
+					if(tmp.size()!=s.size()&&i!=s.length()) {
+						if(sum-1-last>0) cut[k++] = {last, sum-1}, g[sum-last].pb(k-1), maxNum = max(maxNum, sum-last);
+						last = sum;
+					}
+				}
+				tmp.clear();
+			}
+		}
+		wordNum = sum-1, cutNum = k-1;
+	}
+//	cout << sum << endl;
+	fclose(stdin);
+}
+//å¤„ç†å•è¯ 
+void commonWord(string f){
+	string tmp =  "output/commonWord_"+f;
+	freopen(tmp.c_str(), "w", stdout);
+	ull t = 0;
+	for(map<string,ull>::iterator it = mp.begin(); it != mp.end(); it++)
+		b[t++] = {-it->second, it->first};
+	sort(b, b+t);
+	for(ull i = 0; i < min(specifiedNum, t); i++) printf("%s %llu\n", b[i].second.c_str(), -b[i].first);
+	mp.clear();
+//	cout << b[i].second << " " << -b[i].first << endl;
+	fclose(stdout);
+    freopen( "CON", "w", stdout ); //å®šå‘è¾“å‡ºåˆ°æ§åˆ¶å°
+}
+//å¤„ç†çŸ­è¯­ 
+void commonPhrase(string f){
+	string tmp =  "output/commonPhrase_"+f;
+	freopen(tmp.c_str(), "w", stdout);
+//	for(int i = 0; i <= wordNum; i++) printf("%s ", link[i].c_str());
+//	for(int i = 0; i <= cutNum; i++) printf("%d %d\n", cut[i].first, cut[i].second);
+	int now = phraseNum;
+	for(int i = now; i <= maxNum; i++){
+		for(int j = 0; j < g[i].size(); j++){
+			int p = g[i][j], l = cut[p].first, r = cut[p].second;
+			for(int k = l; k <= r+1-now; k++){
+				int tmp = now, id = k;
+				string str;
+				while(tmp--) str = str+link[id++]+" ";
+				phrase[str]++;
+//				while(tmp--) printf("%s ", link[id++].c_str());
+//				printf("\n");
+			}
+		}
+	}
+	ull t = 0;
+	for(map<string,ull>::iterator it = phrase.begin(); it != phrase.end(); it++)
+		c[t++] = {-it->second, it->first};
+	sort(c, c+t);
+	for(ull i = 0; i < t; i++) printf("%s %llu\n", c[i].second.c_str(), -c[i].first);
+	fclose(stdout);
+}
+void handle(string p, string f){
+	wordAnalyze(p, f);
+	if(phraseNum==-1) commonWord(f);
+	else commonPhrase(f);
+}
+//åŠ¨è¯å½’ä¸€åŒ– 
+void normalize(string p){
+	cin.clear();
+//	freopen("res/verbs.txt", "r", stdin);
+	string f = "res/"+p;
+	freopen(f.c_str(), "r", stdin);
+	char ch;
+	string s, now;
+	while(scanf("%c", &ch)&&cin>>s){
+		if(ch=='\n') now = s;
+		turn[s] = now;
+	}
+	fclose(stdin);
+}
+//è¿‡æ»¤stopwords 
+void filter(string p){
+	cin.clear();
+//	freopen("res/stopwords.txt", "r", stdin);
+	string f = "res/"+p;
+	freopen(f.c_str(), "r", stdin);
+	string s;
+	while(cin>>s) stop[s] = 1;
+	fclose(stdin);
+}
+//æŸ¥æ‰¾æ–‡ä»¶ 
+void findfile(string path,string mode){
+	_finddata_t file;
+	intptr_t HANDLE;
+	string Onepath = path + mode;
+	HANDLE = _findfirst(Onepath.c_str(), &file);
+	if (HANDLE == -1L) 	cout << "can not match the folder path" << endl;
+	do {
+		//åˆ¤æ–­æ˜¯å¦æœ‰å­ç›®å½•  
+		if (file.attrib & _A_SUBDIR){
+			if(!allowDown) continue;
+			//åˆ¤æ–­æ˜¯å¦ä¸º"."å½“å‰ç›®å½•ï¼Œ".."ä¸Šä¸€å±‚ç›®å½•
+			if ((strcmp(file.name, ".") != 0) && (strcmp(file.name, "..") != 0)){
+				string newPath = path +"\\" + file.name;
+//				cout << newPath << endl;
+				findfile(newPath,mode);
+			}
+		}
+		else cout << "Searching >>> " << path << "\\" << file.name <<  endl, handle(path, file.name);
+	} while (_findnext(HANDLE, &file) == 0);
+	_findclose(HANDLE);
+}
+//æ˜¾ç¤ºç”¨æ³• 
+void help(){
+	cout << "<Usage>" << endl;
+	cout << "-f [file]  è¾“å‡ºfileä¸­æ‰€æœ‰ä¸é‡å¤çš„å•è¯" << endl;
+	cout << "-d [directory] å¯¹directoryä¸‹æ¯ä¸€ä¸ªæ–‡ä»¶æ‰§è¡Œ-f [file]æ“ä½œ" << endl;
+	cout << "-s -d [directory] é€’å½’éå†ç›®å½•ä¸‹çš„æ‰€æœ‰å­ç›®å½•ï¼Œå¯¹å…¶ä¸­æ¯ä¸ªæ–‡ä»¶æ‰§è¡Œ-f [file]æ“ä½œ" << endl;
+	cout << "-n [number] -f [file] è¾“å‡ºfileä¸­å‡ºç°æ¬¡æ•°æœ€å¤šçš„å‰numberä¸ªå•è¯" << endl;
+	cout << "-p [number] -f [file] è¾“å‡ºfileä¸­numberä¸ªè¯çš„çŸ­è¯­" << endl;
+	cout << "-x [stopword_file] -f [file]  åœ¨ç»Ÿè®¡fileä¸­è¯æ±‡çš„æ—¶å€™ï¼Œè·³è¿‡stopword_fileä¸­çš„è¯" << endl;
+	cout << "-v [verb_file] æŒ‰ç…§verb_fileæŠŠæ–‡ä»¶ä¸­çš„åŠ¨è¯çš„å„ç§å˜å½¢éƒ½å½’ä¸ºå®ƒçš„åŸå‹æ¥ç»Ÿè®¡" << endl;
 }
 
-
-int main(int argc, char *argv[])
-{
-	for(int i = 1; i < argc; i++)  //µÚÒ»¸öÊÇÎÄ¼şµÄÃû×Ö 
-	{
-		if(strcmp("-f", argv[i]) == 0)
-		{
-			mySort(argc, argv, 1);
-			break;
-		} 
-		else if(!strcmp("-d", argv[i]) && !strcmp("-s", argv[i+1]))
-		{
-			i = i+2;
-			solve2(argv, i, 1);
-			break;
+int main(int argc,char **argv){
+	if(argc==1) return !printf("Please input the command\n");
+	for(ull i = 1; i <= argc-1; i++){
+		string s = argv[i];
+		if(s[0]=='-') {
+			if(s[1]=='h') help();
+			else if(s[1]=='s') allowDown = true;
+			else {
+				if(i+1==argc) return !printf("Invalid command\n");
+				string f = argv[++i];
+				if(s[1]=='c') letterFrequency(f);
+				else if(s[1]=='f') handle(".", f);
+				else if(s[1]=='p') phraseNum = stoi(f);
+				else if(s[1]=='n') specifiedNum = stoi(f);
+				else if(s[1]=='v') normalize(f);
+				else if(s[1]=='x') filter(f);
+				else if(s[1]=='d') findfile(f, mode);
+				else return !printf("Invalid command\n");
+			}
 		}
-		else if(!strcmp("-d", argv[i]))
-		{
-			i = i + 1;
-			solve2(argv, i, 0);
-			break;
-		}
-		else if(!strcmp("-x", argv[i]))
-		{
-			mySort(argc, argv, 3, 1);
-			break;
-		}
-		
+		else return !printf("Invalid command\n");
 	}
-	return 0;
-} 
+}
